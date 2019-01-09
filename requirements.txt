@@ -1,0 +1,5 @@
+Flask==1.0.2
+requests==2.20.0
+dialogflow
+BeautifulSoup==3.2.1
+pyknow==1.7.0
