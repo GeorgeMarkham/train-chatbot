@@ -9,8 +9,8 @@ from os import environ
 
 class df_intent_detect:
     def __init__(self):
-    #    environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/georgemarkham/Documents/MSc/AI/train-chatbot-deployment/train-chatbot/client_secret.json"
-        environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/gmarkham/train-chatbot/client_secret.json"
+        environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/georgemarkham/Documents/MSc/AI/train-chatbot-deployment/train-chatbot/client_secret.json"
+        # environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/gmarkham/train-chatbot/client_secret.json"
         self.session_client = session_client = dialogflow.SessionsClient()
         self.session = session_client.session_path("trainchatbot", str(uuid.uuid4()))
         self.language_code = "en"
@@ -48,7 +48,7 @@ class df_intent_detect:
                     date = response.query_result.output_contexts[0].parameters['depart_date']
                     trains = get_train_fares.get_train_fares(from_stn, to_stn, date, time)
                     cheapest_train = trains[0]
-                    return "The cheapest ticket from " + from_stn + " to " + to_stn + " is at " + str(cheapest_train['time']) + " and costs £" + str(cheapest_train['cost'])
+                    return "The cheapest ticket from " + from_stn + " to " + to_stn + " is at " + str(cheapest_train['time']) + " and costs £" + str(cheapest_train['cost']) + ". Here's the link: " + cheapest_train['url']
             if action == "train_delay.train_delay-yes":
                 try:
                     current_delay = int(response.query_result.output_contexts[0].parameters['current_delay'])
