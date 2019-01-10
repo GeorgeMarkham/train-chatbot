@@ -43,7 +43,6 @@ def webhook():
                 msg = msg_entry['message']['text']
                 print("Got this far 123456789 10")
                 reply(s_id, df.detect_intent_and_reply(msg, s_id))
-                # return df.detect_intent_and_reply(msg), 200
     return "Recieved the message", 200
 
 

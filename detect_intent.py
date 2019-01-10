@@ -3,6 +3,9 @@ import uuid
 from contingency_planning import Rail_Line_Name
 from contingency_planning import Line
 from predict_delay import predict_delay
+from mongoConnector import mongoConnector
+from pymongo import ASCENDING, DESCENDING
+from datetime import datetime
 import get_train_fares
 from os import environ
 
@@ -14,6 +17,7 @@ class df_intent_detect:
         self.session_client = session_client = dialogflow.SessionsClient()
         self.session = session_client.session_path("trainchatbot", str(uuid.uuid4()))
         self.language_code = "en"
+        self.db = mongoConnector("mongodb://127.0.0.1:27017/", "train_data")
 
 
     def detect_intent_and_reply(self, text, sender_id):
@@ -28,6 +32,12 @@ class df_intent_detect:
             text_input = dialogflow.types.TextInput(text=text, language_code=self.language_code)
             query_input = dialogflow.types.QueryInput(text=text_input)
             response = self.session_client.detect_intent(session=self.session, query_input=query_input)
+
+            if self.db.findOne("customers", {"sender_id": sender_id}) == None:
+                self.db.store("customers", {
+                    "sender_id": sender_id, 
+                    "trains": []
+                    })
 
             action = response.query_result.action
             print(action)
@@ -48,6 +58,7 @@ class df_intent_detect:
                     date = response.query_result.output_contexts[0].parameters['depart_date']
                     trains = get_train_fares.get_train_fares(from_stn, to_stn, date, time)
                     cheapest_train = trains[0]
+                    self.db.findOneAndUpdate("customers", {"sender_id": sender_id}, {"$push": {"trains": cheapest_train}})
                     return "The cheapest ticket from " + from_stn + " to " + to_stn + " is at " + str(cheapest_train['time']) + " and costs £" + str(cheapest_train['cost']) + ". Here's the link: " + cheapest_train['url']
             if action == "train_delay.train_delay-yes":
                 try:
@@ -77,9 +88,39 @@ class df_intent_detect:
                     engine.run()
                     return engine.response
                 except:
-                    return response.query_result.fulfillment_text
+                    print(response.query_result.output_contexts[0])
+                    return "We're having some problems, check back in a bit"
+            if response.query_result.intent.display_name == "next-train-query":
+                try:
+                    customer = self.db.findOne("customers", {"sender_id": sender_id})
+                    trains = customer['trains']
+                    if len(trains) > 0:
+                        # sorted_trains = trains.sort([("date", ASCENDING), ("time", ASCENDING)])
+                        # sorted_trains[0]
+                        sorted_trains = sorted(sorted(trains, key=lambda x: x['time'], reverse=False), key=lambda x: x['time'], reverse=False)
+                        i = 0
+                        train_dt = datetime.strptime(str(sorted_trains[i]['date']) + " " + str(sorted_trains[i]['time']) , "%d%m%y %H%M")
+                        while i < len(sorted_trains) and train_dt < datetime.now():
+                            train_dt = datetime.strptime(str(sorted_trains[i]['date']) + " " + str(sorted_trains[i]['time']) , "%d%m%y %H%M")
+                            i = i+1
+                        if i < len(sorted_trains):
+                            train_time = str(sorted_trains[i]['time'])[:2] + ":" + str(sorted_trains[i]['time'])[2:]
+                            train_date = str(sorted_trains[i]['date'])[:2] + "/" + str(sorted_trains[i]['date'])[2:4] + "/" + str(sorted_trains[i]['date'])[4:]
+                            train_from = str(sorted_trains[i]['from'])
+                            train_to = str(sorted_trains[i]['to'])
+                            return "Your next train is at " + train_time + " on " + train_date + ". Going from " + train_from + " to " + train_to + ". Have a great trip!"
+                        else:
+                            return "It appears you don't have any trips planned! Remember you can always book a trip with us, just ask!"
+
+                    else:
+                        return "We don't seem to have any data about trains you're interested in. If you'd like to book a train ticket all you need to do is ask!"
+
+                except:
+                    print(response.query_result.output_contexts[0])
+                    return "We're having some problems, check back in a bit"
             else:
                 return response.query_result.fulfillment_text
+            
         else:
             return ""
     def fmt_intended_arrival(self, dt):

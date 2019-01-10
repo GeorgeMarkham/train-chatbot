@@ -51,6 +51,7 @@ def get_train_fares(FROM, TO, DATE, TIME, get_cheapest=True, get_earliest=False)
                         ticket['from'] = from_stn.text.strip().split(" ")[0]
                         ticket['to'] = to_stn.text.strip().split(" ")[0]
                         ticket['time'] = int(format_time(time.text.strip().split(" ")[0]))
+                        ticket['date'] = int(DATE)
                         ticket['cost'] = float(fare.find('label').text.strip().replace(" ", "")[1:])
                         ticket['url'] = str(URL)
                         tix.append(ticket)
