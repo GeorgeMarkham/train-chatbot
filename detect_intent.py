@@ -12,8 +12,8 @@ from os import environ
 
 class df_intent_detect:
     def __init__(self):
-        environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/georgemarkham/Documents/MSc/AI/train-chatbot-deployment/train-chatbot/client_secret.json"
-        # environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/gmarkham/train-chatbot/client_secret.json"
+        # environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/georgemarkham/Documents/MSc/AI/train-chatbot-deployment/train-chatbot/client_secret.json"
+        environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/gmarkham/train-chatbot/client_secret.json"
         self.session_client = session_client = dialogflow.SessionsClient()
         self.session = session_client.session_path("trainchatbot", str(uuid.uuid4()))
         self.language_code = "en"
