@@ -12,8 +12,8 @@ from os import environ
 
 class df_intent_detect:
     def __init__(self):
-        # environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/georgemarkham/Documents/MSc/AI/train-chatbot-deployment/train-chatbot/client_secret.json"
-        environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/gmarkham/train-chatbot/client_secret.json"
+        environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/georgemarkham/Documents/MSc/AI/train-chatbot-deployment/train-chatbot/client_secret.json"
+        # environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/gmarkham/train-chatbot/client_secret.json"
         self.session_client = session_client = dialogflow.SessionsClient()
         self.session = session_client.session_path("trainchatbot", str(uuid.uuid4()))
         self.language_code = "en"
@@ -58,8 +58,16 @@ class df_intent_detect:
                     date = response.query_result.output_contexts[0].parameters['depart_date']
                     trains = get_train_fares.get_train_fares(from_stn, to_stn, date, time)
                     cheapest_train = trains[0]
+
                     self.db.findOneAndUpdate("customers", {"sender_id": sender_id}, {"$push": {"trains": cheapest_train}})
-                    return "The cheapest ticket from " + from_stn + " to " + to_stn + " is at " + str(cheapest_train['time']) + " and costs £" + str(cheapest_train['cost']) + ". Here's the link: " + cheapest_train['url']
+                    
+                    predictor = predict_delay()
+                    print(date.split("T")[0] +"T"+ time.split("T")[1])
+                    day, month, year, date, time = self.fmt_intended_arrival(date.split("T")[0] +"T"+ time.split("T")[1])
+                    print(day, month, year, date, time)
+                    delay_time = str(predictor.predict(0, day, month, year, date, time, from_stn, to_stn))
+                    delay_time = 0
+                    return "The cheapest ticket from " + from_stn + " to " + to_stn + " is at " + str(cheapest_train['time']) + " and costs £" + str(cheapest_train['cost']) + ". We think you'll be " + str(delay_time) + " minutes late. Here's the link: " + str(cheapest_train['url'])
             if action == "train_delay.train_delay-yes":
                 try:
                     current_delay = int(response.query_result.output_contexts[0].parameters['current_delay'])
@@ -108,7 +116,9 @@ class df_intent_detect:
                             train_date = str(sorted_trains[i]['date'])[:2] + "/" + str(sorted_trains[i]['date'])[2:4] + "/" + str(sorted_trains[i]['date'])[4:]
                             train_from = str(sorted_trains[i]['from'])
                             train_to = str(sorted_trains[i]['to'])
-                            return "Your next train is at " + train_time + " on " + train_date + ". Going from " + train_from + " to " + train_to + ". Have a great trip!"
+                            predictor = predict_delay()
+                            delay_time = str(predictor.predict(0, int(train_date.split("/")[0]), int(train_date.split("/")[1]), int(train_date.split("/")[2]), int(sorted_trains[i]['date']), int(sorted_trains[i]['time']), train_from, train_to))
+                            return "Your next train is at " + train_time + " on " + train_date + ". Going from " + train_from + " to " + train_to + ". Have a great trip! Oh and we reckon you're going to be " + delay_time + " minutes late arriving at " + train_to + " by the way"
                         else:
                             return "It appears you don't have any trips planned! Remember you can always book a trip with us, just ask!"
 
@@ -116,7 +126,7 @@ class df_intent_detect:
                         return "We don't seem to have any data about trains you're interested in. If you'd like to book a train ticket all you need to do is ask!"
 
                 except:
-                    print(response.query_result.output_contexts[0])
+                    print(response.query_result[0])
                     return "We're having some problems, check back in a bit"
             else:
                 return response.query_result.fulfillment_text
