@@ -8,7 +8,7 @@ import requests
 
 
 app = Flask(__name__)
-# PAGE_ACCESS_TOKEN_1 = 'EAAf8lGp4TlIBAGo8NVIe4KvecFZCFxI0LXhZAydXZBDCcy7N0veEZBhQu3sMDetSYlGSYSXZCPRZAZAOFsHQnkjENpiYX5ZChMmGvqApZAL83NR0xZCffjw9iru2I2jHfaNUT9hxZCEZCjzKIBexZAxxDhUwQy7X1q38WZBZBDG8JXOXuUl6gZDZD'
+
 PAGE_ACCESS_TOKEN = "EAAgjq581d4UBAGH58G1pakE9sy3DZBOWOgw3pZBUaI2d6PWSEOXqw248Bik8g8ngJZCNhjqOAVQ50XiZAMxn1izXzFIBffhQYILExvwIiC3zc6yOsWdj3tmDpZADnCqWZBLOx9HZBtXRqw8F0rd2F3nAB1ZBD0y5W0B8KKBP00y5a1Dlp9nnEY9i"
 VERIFICATION_TOKEN = "9d35b6cb-e4b7-4db8-b0bb-8697122be8ca"
 df = df_intent_detect()
@@ -46,31 +46,6 @@ def webhook():
                 # return df.detect_intent_and_reply(msg), 200
     return "Recieved the message", 200
 
-
-
-
-# @app.route('/', methods=['POST'])
-# def webhook():
-#     data = request.get_json()
-#     if data != None:
-#         if data['object']=='page':
-#             for entry in data['entry']:
-#                 my_id = entry['id']
-#                 for msging_event in entry['messaging']:
-#                     print(msging_event)
-#                     s_id = msging_event['sender']['id']
-#                     if msging_event.get('message'):
-#                         if 'text' in msging_event['message']:
-#                             msg_text = msging_event['message']['text']
-#                             print('111111111')
-#                             print(msg_text)
-#                             newRply = get_news_elements(wit_response(msg_text,s_id),s_id,msg_text)
-#                         else:
-#                             msg_text = 'no text'
-#                         reply(s_id,newRply)
-#     else:
-#         return "No data", 400
-#     return "ok",200
 
 @app.route('/tos', methods=['GET'])
 def tos():

@@ -1,4 +1,4 @@
-import dialogflow as dialogflow
+import dialogflow_v2beta1 as dialogflow
 import uuid
 from contingency_planning import Rail_Line_Name
 from contingency_planning import Line
